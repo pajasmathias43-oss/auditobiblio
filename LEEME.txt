@@ -1,0 +1,38 @@
+MI BIBLIOTECA — instalación en Android
+
+CONTENIDO
+- index.html: aplicación
+- manifest.webmanifest: datos de instalación
+- sw.js: soporte básico sin conexión
+- icon-192.png e icon-512.png: iconos
+
+IMPORTANTE
+Para instalarla como aplicación con icono, estos archivos deben publicarse en una dirección HTTPS.
+La forma gratuita más sencilla es GitHub Pages.
+
+PASOS
+1. En un ordenador, entra en https://github.com y crea una cuenta o inicia sesión.
+2. Crea un repositorio nuevo, por ejemplo: mi-biblioteca. Puedes dejarlo público.
+3. Sube TODOS los archivos de esta carpeta a la raíz del repositorio: index.html, manifest.webmanifest, sw.js, icon-192.png e icon-512.png.
+4. En el repositorio, abre Settings > Pages.
+5. En “Build and deployment”, elige “Deploy from a branch”; selecciona la rama main y la carpeta /(root), y pulsa Save.
+6. Espera a que GitHub publique el sitio. La dirección será parecida a https://TU-USUARIO.github.io/mi-biblioteca/
+7. En Android, abre esa dirección con Chrome. Espera unos segundos y, si aparece “Instalar aplicación”, selecciónalo. Si no aparece, abre el menú ⋮ de Chrome y toca “Instalar aplicación” o “Añadir a pantalla de inicio”.
+8. Abre la app desde el icono. Para dictar, toca un campo y después el micrófono del teclado Android/Gboard. Revisa el texto y guarda.
+
+USO
+- Añadir: completa título, autor, estado y balda.
+- Escanear ISBN: pulsa “Escanear ISBN con la cámara”, concede permiso de cámara y enfoca el código de barras de la contraportada. La aplicación consulta Google Books y Open Library para intentar rellenar título y autor; revisa siempre los datos antes de guardar. Requiere conexión a Internet y una web HTTPS.
+- Buscar: usa el buscador de la colección.
+- Editar/eliminar: cada ficha tiene sus botones.
+- Exportar a Excel (CSV): descarga un CSV que Excel puede abrir.
+- Copia de seguridad: descarga un JSON para restaurar los datos más adelante.
+
+PRIVACIDAD Y COPIAS
+Los libros se guardan en el almacenamiento local del navegador de ese dispositivo. No se sincronizan automáticamente con otros móviles ni se guardan en una cuenta. No borres los datos del sitio ni desinstales/limpies Chrome sin exportar antes una copia de seguridad. Guarda el JSON en Google Drive u otro lugar seguro.
+
+VOZ
+Esta versión usa el dictado del teclado Android, no graba audio por sí misma ni necesita una API de IA. Puedes dictar el título y el autor en sus campos. Como el formulario tiene campos separados, rellena cada uno con el micrófono y luego guarda.
+
+ESCÁNER ISBN
+El escáner necesita permiso de cámara, conexión a Internet para cargar el lector de códigos y consultar catálogos, y que la app esté publicada bajo HTTPS. No todos los libros aparecen en los catálogos; si no encuentra el ISBN, introduce título y autor manualmente. El ISBN se usa para buscar metadatos y no se guarda como una quinta columna.

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#176b55">
+  <meta name="description" content="Inventario personal de libros por voz.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <title>Mi Biblioteca</title>
+  <style>
+    :root { color-scheme: light; --green:#176b55; --bg:#f4f7f5; --ink:#18231f; --muted:#64716b; --line:#dce5df; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    header { background:var(--green); color:white; padding:22px 18px 18px; }
+    header h1 { margin:0; font-size:1.45rem; }
+    header p { margin:5px 0 0; opacity:.9; font-size:.95rem; }
+    main { max-width:760px; margin:auto; padding:16px; padding-bottom:40px; }
+    .card { background:white; border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:14px; box-shadow:0 2px 8px #132b1b08; }
+    h2 { font-size:1.08rem; margin:0 0 12px; }
+    label { display:block; font-weight:650; font-size:.92rem; margin:12px 0 6px; }
+    input, select { width:100%; min-height:48px; border:1px solid #cbd7d0; border-radius:11px; padding:11px 12px; font:inherit; background:#fff; color:var(--ink); }
+    input:focus,select:focus { outline:2px solid #8cc7b4; border-color:var(--green); }
+    .hint { font-size:.83rem; color:var(--muted); margin:8px 0 0; line-height:1.4; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button { border:0; border-radius:11px; padding:12px 14px; font:inherit; font-weight:700; cursor:pointer; min-height:46px; }
+    .primary { background:var(--green); color:white; width:100%; margin-top:15px; }
+    .secondary { background:#e8f2ed; color:#14523f; }
+    .danger { background:#fff0ee; color:#9a3027; }
+    .toolbar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .toolbar button { width:100%; }
+    .search { margin-bottom:12px; }
+    .book { border:1px solid var(--line); border-radius:13px; padding:13px; margin-top:9px; background:#fff; }
+    .book-title { font-weight:750; font-size:1rem; overflow-wrap:anywhere; }
+    .book-meta { color:var(--muted); margin-top:4px; font-size:.91rem; overflow-wrap:anywhere; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+    .chip { border-radius:99px; background:#eaf3ee; color:#1a5a45; padding:4px 9px; font-size:.78rem; font-weight:650; }
+    .book-actions { display:flex; gap:8px; margin-top:10px; }
+    .book-actions button { flex:1; min-height:40px; padding:8px; }
+    .empty { color:var(--muted); text-align:center; padding:22px 8px; }
+    .count { color:var(--muted); font-size:.88rem; }
+    footer { text-align:center; color:var(--muted); font-size:.8rem; padding:0 20px 24px; }
+    @media (max-width:420px) { .row { grid-template-columns:1fr; gap:0; } main { padding:12px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>📚 Mi Biblioteca</h1>
+  <p>Tu inventario personal, sencillo y privado.</p>
+</header>
+<main>
+  <section class="card">
+    <h2 id="formTitle">Añadir un libro</h2>
+    <form id="bookForm">
+      <input type="hidden" id="bookId">
+      <label for="title">Título</label>
+      <input id="title" autocomplete="off" required placeholder="Toca el micrófono del teclado y dicta el título">
+      <button class="secondary" type="button" id="scanIsbn" style="width:100%;margin-top:8px">📷 Escanear ISBN con la cámara</button>
+      <div id="scannerPanel" style="display:none;margin-top:10px">
+        <video id="scannerVideo" playsinline style="width:100%;max-height:300px;background:#111;border-radius:12px"></video>
+        <p class="hint" id="scannerMessage">Apunta la cámara al código de barras ISBN de la contraportada.</p>
+        <button class="danger" type="button" id="stopScanner" style="width:100%">Cerrar cámara</button>
+      </div>
+      <label for="author">Autor</label>
+      <input id="author" autocomplete="off" placeholder="Nombre del autor">
+      <div class="row">
+        <div>
+          <label for="status">Estado</label>
+          <select id="status">
+            <option>Pendiente de leer</option>
+            <option>Leyendo</option>
+            <option>Leído</option>
+            <option>Prestado</option>
+            <option>En pausa</option>
+          </select>
+        </div>
+        <div>
+          <label for="shelf">Balda</label>
+          <input id="shelf" autocomplete="off" placeholder="Ej. 2, salón, B">
+        </div>
+      </div>
+      <p class="hint">Consejo: en Android, toca un campo y pulsa el micrófono del teclado para dictar. Revisa el texto antes de guardar.</p>
+      <button class="primary" type="submit" id="saveBtn">Guardar libro</button>
+      <button class="secondary" type="button" id="cancelEdit" style="display:none;width:100%;margin-top:8px">Cancelar edición</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Mi colección</h2>
+    <input class="search" id="search" placeholder="Buscar por título, autor, estado o balda">
+    <div class="toolbar">
+      <button class="secondary" id="exportCsv" type="button">Exportar a Excel (CSV)</button>
+      <button class="secondary" id="exportJson" type="button">Copia de seguridad</button>
+      <button class="secondary" id="importJsonBtn" type="button">Restaurar copia</button>
+      <button class="danger" id="installBtn" type="button" hidden>Instalar aplicación</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint">Los libros se guardan en este dispositivo. Usa “Copia de seguridad” para guardar un archivo aparte.</p>
+    <p class="count" id="count"></p>
+    <div id="bookList"></div>
+  </section>
+</main>
+<footer>Mi Biblioteca · Los datos permanecen en este dispositivo, salvo que exportes una copia.</footer>
+
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<script>
+const STORAGE_KEY = "mi-biblioteca-libros-v1";
+const $ = id => document.getElementById(id);
+let books = [];
+let deferredInstallPrompt = null;
+
+function loadBooks() {
+  try { books = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { books = []; }
+}
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+  render();
+}
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[ch]);
+}
+function resetForm() {
+  $("bookForm").reset();
+  $("bookId").value = "";
+  $("formTitle").textContent = "Añadir un libro";
+  $("saveBtn").textContent = "Guardar libro";
+  $("cancelEdit").style.display = "none";
+  $("status").value = "Pendiente de leer";
+}
+$("bookForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const title = $("title").value.trim();
+  const author = $("author").value.trim();
+  const status = $("status").value;
+  const shelf = $("shelf").value.trim();
+  if (!title) { alert("Escribe o dicta el título del libro."); return; }
+  const id = $("bookId").value;
+  if (id) {
+    const index = books.findIndex(b => b.id === id);
+    if (index >= 0) books[index] = {...books[index], title, author, status, shelf};
+  } else {
+    books.unshift({id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, author, status, shelf, createdAt: new Date().toISOString()});
+  }
+  persist();
+  resetForm();
+});
+$("cancelEdit").addEventListener("click", resetForm);
+
+function editBook(id) {
+  const b = books.find(item => item.id === id);
+  if (!b) return;
+  $("bookId").value = b.id;
+  $("title").value = b.title || "";
+  $("author").value = b.author || "";
+  $("status").value = b.status || "Pendiente de leer";
+  $("shelf").value = b.shelf || "";
+  $("formTitle").textContent = "Editar libro";
+  $("saveBtn").textContent = "Guardar cambios";
+  $("cancelEdit").style.display = "block";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function deleteBook(id) {
+  const b = books.find(item => item.id === id);
+  if (!b || !confirm(`¿Eliminar “${b.title}” del inventario?`)) return;
+  books = books.filter(item => item.id !== id);
+  persist();
+}
+function render() {
+  const q = $("search").value.trim().toLocaleLowerCase("es");
+  const filtered = books.filter(b => [b.title,b.author,b.status,b.shelf].join(" ").toLocaleLowerCase("es").includes(q));
+  $("count").textContent = `${filtered.length} libro(s) mostrado(s) · ${books.length} en total`;
+  const list = $("bookList");
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">${books.length ? "No hay resultados para esa búsqueda." : "Todavía no has añadido libros. Empieza con el formulario de arriba."}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(b => `
+    <article class="book">
+      <div class="book-title">${escapeHtml(b.title)}</div>
+      <div class="book-meta">${escapeHtml(b.author || "Autor no indicado")}</div>
+      <div class="chips">
+        <span class="chip">${escapeHtml(b.status || "Sin estado")}</span>
+        <span class="chip">Balda: ${escapeHtml(b.shelf || "Sin indicar")}</span>
+      </div>
+      <div class="book-actions">
+        <button class="secondary" type="button" data-edit="${escapeHtml(b.id)}">Editar</button>
+        <button class="danger" type="button" data-delete="${escapeHtml(b.id)}">Eliminar</button>
+      </div>
+    </article>`).join("");
+  list.querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => editBook(btn.dataset.edit)));
+  list.querySelectorAll("[data-delete]").forEach(btn => btn.addEventListener("click", () => deleteBook(btn.dataset.delete)));
+}
+$("search").addEventListener("input", render);
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+$("exportCsv").addEventListener("click", () => {
+  const rows = [["Título","Autor","Estado","Balda"], ...books.map(b => [b.title,b.author,b.status,b.shelf])];
+  const csv = "\uFEFF" + rows.map(row => row.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  downloadBlob(new Blob([csv], {type:"text/csv;charset=utf-8"}), "mi_biblioteca.csv");
+});
+$("exportJson").addEventListener("click", () => {
+  downloadBlob(new Blob([JSON.stringify(books,null,2)], {type:"application/json"}), "copia_mi_biblioteca.json");
+});
+$("importJsonBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const imported = JSON.parse(await file.text());
+    if (!Array.isArray(imported) || !imported.every(b => b && typeof b.title === "string")) throw new Error("Formato no válido");
+    if (!confirm(`La copia contiene ${imported.length} libros. ¿Quieres sustituir el inventario actual?`)) return;
+    books = imported.map(b => ({
+      id: String(b.id || (Date.now() + Math.random())),
+      title: b.title || "", author: b.author || "",
+      status: b.status || "Pendiente de leer", shelf: b.shelf || ""
+    }));
+    persist();
+    alert("Copia restaurada.");
+  } catch { alert("No se pudo leer la copia. Selecciona un archivo JSON exportado por esta aplicación."); }
+  finally { event.target.value = ""; }
+});
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  $("installBtn").hidden = false;
+});
+$("installBtn").addEventListener("click", async () => {
+  if (!deferredInstallPrompt) {
+    alert("Si ya has añadido la app, abre el menú de Chrome y busca “Instalar aplicación” o “Añadir a pantalla de inicio”.");
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  $("installBtn").hidden = true;
+});
+
+let codeReader = null;
+let scannerControls = null;
+let scanBusy = false;
+
+$("scanIsbn").addEventListener("click", async () => {
+  if (!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) {
+    alert("No se ha podido cargar el lector de códigos. Comprueba la conexión a Internet y vuelve a intentarlo.");
+    return;
+  }
+  try {
+    $("scannerPanel").style.display = "block";
+    $("scannerMessage").textContent = "Solicitando acceso a la cámara…";
+    codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+    const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+    const backCamera = devices.find(d => /back|rear|environment|trasera/i.test(d.label));
+    const deviceId = backCamera ? backCamera.deviceId : (devices[0] && devices[0].deviceId);
+    if (!deviceId) throw new Error("No se ha encontrado ninguna cámara.");
+    scannerControls = await codeReader.decodeFromVideoDevice(deviceId, $("scannerVideo"), async (result, err, controls) => {
+      if (!result || scanBusy) return;
+      const raw = result.getText().replace(/[^0-9Xx]/g, "");
+      // EAN-13 book barcodes generally begin with 978 or 979.
+      if (!/^97[89]\d{10}$/.test(raw)) {
+        $("scannerMessage").textContent = "Código leído, pero no parece un ISBN-13. Prueba con el código de barras del libro.";
+        return;
+      }
+      scanBusy = true;
+      $("scannerMessage").textContent = "ISBN " + raw + " detectado. Buscando los datos del libro…";
+      try {
+        controls.stop();
+        await buscarLibroPorISBN(raw);
+      } catch (e) {
+        $("scannerMessage").textContent = "No se han podido recuperar los datos. Puedes escribirlos manualmente.";
+        alert("No se ha encontrado información para ese ISBN. Rellena el título y el autor manualmente.");
+      } finally {
+        scanBusy = false;
+        $("scannerPanel").style.display = "none";
+      }
+    });
+    $("scannerMessage").textContent = "Apunta la cámara al código de barras ISBN de la contraportada.";
+  } catch (e) {
+    $("scannerMessage").textContent = "No se pudo abrir la cámara.";
+    alert("No se pudo abrir la cámara. Comprueba los permisos y que la página esté abierta con HTTPS.");
+    $("scannerPanel").style.display = "none";
+  }
+});
+
+async function buscarLibroPorISBN(isbn) {
+  let title = "";
+  let author = "";
+  // Google Books is tried first, then Open Library.
+  try {
+    const response = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + encodeURIComponent(isbn));
+    if (response.ok) {
+      const data = await response.json();
+      const info = data.items && data.items[0] && data.items[0].volumeInfo;
+      if (info) {
+        title = info.title || "";
+        author = Array.isArray(info.authors) ? info.authors.join(", ") : "";
+      }
+    }
+  } catch (_) {}
+  if (!title) {
+    try {
+      const response = await fetch("https://openlibrary.org/api/books?bibkeys=ISBN:" + encodeURIComponent(isbn) + "&format=json&jscmd=data");
+      if (response.ok) {
+        const data = await response.json();
+        const info = data["ISBN:" + isbn];
+        if (info) {
+          title = info.title || "";
+          author = Array.isArray(info.authors) ? info.authors.map(a => a.name).join(", ") : "";
+        }
+      }
+    } catch (_) {}
+  }
+  if (!title) throw new Error("Libro no encontrado");
+  $("title").value = title;
+  if (author) $("author").value = author;
+  $("scannerMessage").textContent = "Datos encontrados. Revisa el título y el autor y guarda el libro.";
+}
+
+$("stopScanner").addEventListener("click", () => {
+  try { if (scannerControls) scannerControls.stop(); } catch (_) {}
+  try { if (codeReader) codeReader.reset(); } catch (_) {}
+  scannerControls = null;
+  codeReader = null;
+  scanBusy = false;
+  $("scannerPanel").style.display = "none";
+});
+
+loadBooks();
+prepararInicial();
+render();
+function prepararInicial() {
+  $("status").value = "Pendiente de leer";
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  }
+}
+</script>
+</body>
+</html>
