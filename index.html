@@ -57,7 +57,7 @@
       <input id="title" autocomplete="off" required placeholder="Toca el micrófono del teclado y dicta el título">
       <button class="secondary" type="button" id="scanIsbn" style="width:100%;margin-top:8px">📷 Escanear ISBN con la cámara</button>
       <div id="scannerPanel" style="display:none;margin-top:10px">
-        <video id="scannerVideo" playsinline style="width:100%;max-height:300px;background:#111;border-radius:12px"></video>
+        <video id="scannerVideo" playsinline autoplay muted style="width:100%;max-height:300px;background:#111;border-radius:12px"></video>
         <p class="hint" id="scannerMessage">Apunta la cámara al código de barras ISBN de la contraportada.</p>
         <button class="danger" type="button" id="stopScanner" style="width:100%">Cerrar cámara</button>
       </div>
@@ -249,43 +249,78 @@ let scannerControls = null;
 let scanBusy = false;
 
 $("scanIsbn").addEventListener("click", async () => {
+  const video = $("scannerVideo");
+  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Este navegador no permite acceder a la cámara en esta página. Abre Mi Biblioteca desde su dirección HTTPS completa en Chrome y vuelve a intentarlo.");
+    return;
+  }
   if (!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) {
-    alert("No se ha podido cargar el lector de códigos. Comprueba la conexión a Internet y vuelve a intentarlo.");
+    alert("No se ha podido cargar el lector de códigos de barras. Comprueba la conexión a Internet y vuelve a intentarlo.");
     return;
   }
   try {
     $("scannerPanel").style.display = "block";
-    $("scannerMessage").textContent = "Solicitando acceso a la cámara…";
+    $("scannerMessage").textContent = "Solicitando permiso para usar la cámara…";
+
+    // Solicitar permiso explícitamente antes de enumerar dispositivos. En algunos
+    // navegadores los dispositivos no se enumeran correctamente hasta dar permiso.
+    const permissionStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "environment" } }
+    });
+    permissionStream.getTracks().forEach(track => track.stop());
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter(device => device.kind === "videoinput");
+    const backCamera = cameras.find(device => /back|rear|environment|trasera|posterior/i.test(device.label));
+    const deviceId = (backCamera || cameras[0] || {}).deviceId;
+    if (!cameras.length) throw new Error("NOT_FOUND:No se ha encontrado ninguna cámara disponible para Chrome.");
+
     codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-    const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-    const backCamera = devices.find(d => /back|rear|environment|trasera/i.test(d.label));
-    const deviceId = backCamera ? backCamera.deviceId : (devices[0] && devices[0].deviceId);
-    if (!deviceId) throw new Error("No se ha encontrado ninguna cámara.");
-    scannerControls = await codeReader.decodeFromVideoDevice(deviceId, $("scannerVideo"), async (result, err, controls) => {
+    $("scannerMessage").textContent = "Cámara activada. Apunta al código de barras ISBN de la contraportada.";
+    scannerControls = await codeReader.decodeFromVideoDevice(deviceId, video, async (result, err, controls) => {
       if (!result || scanBusy) return;
       const raw = result.getText().replace(/[^0-9Xx]/g, "");
-      // EAN-13 book barcodes generally begin with 978 or 979.
       if (!/^97[89]\d{10}$/.test(raw)) {
-        $("scannerMessage").textContent = "Código leído, pero no parece un ISBN-13. Prueba con el código de barras del libro.";
+        $("scannerMessage").textContent = "Código leído, pero no parece un ISBN-13. Enfoca el código de barras de la contraportada.";
         return;
       }
       scanBusy = true;
       $("scannerMessage").textContent = "ISBN " + raw + " detectado. Buscando los datos del libro…";
       try {
-        controls.stop();
+        if (controls && controls.stop) controls.stop();
         await buscarLibroPorISBN(raw);
+        $("scannerMessage").textContent = "Datos encontrados. Revisa el título y el autor y guarda el libro.";
       } catch (e) {
-        $("scannerMessage").textContent = "No se han podido recuperar los datos. Puedes escribirlos manualmente.";
+        $("scannerMessage").textContent = "No se encontraron los datos de ese ISBN. Puedes escribir título y autor manualmente.";
         alert("No se ha encontrado información para ese ISBN. Rellena el título y el autor manualmente.");
       } finally {
         scanBusy = false;
+        if (scannerControls && scannerControls.stop) scannerControls.stop();
         $("scannerPanel").style.display = "none";
       }
     });
-    $("scannerMessage").textContent = "Apunta la cámara al código de barras ISBN de la contraportada.";
   } catch (e) {
-    $("scannerMessage").textContent = "No se pudo abrir la cámara.";
-    alert("No se pudo abrir la cámara. Comprueba los permisos y que la página esté abierta con HTTPS.");
+    const name = e && e.name ? e.name : "";
+    const message = String(e && e.message ? e.message : "");
+    let explanation = "No se pudo iniciar la cámara.";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError" || /denied|permission/i.test(message)) {
+      explanation = "Chrome ha rechazado el acceso a la cámara. Revisa el permiso de Cámara de Chrome y el permiso de este sitio web.";
+    } else if (name === "NotFoundError" || /NOT_FOUND/.test(message)) {
+      explanation = "No se ha detectado una cámara disponible para el navegador.";
+    } else if (name === "NotReadableError" || name === "TrackStartError") {
+      explanation = "La cámara está ocupada por otra aplicación. Cierra otras apps que la estén usando y vuelve a probar.";
+    } else if (name === "OverconstrainedError") {
+      explanation = "No se ha podido seleccionar la cámara trasera. Inténtalo de nuevo.";
+    } else if (name === "SecurityError" || !window.isSecureContext) {
+      explanation = "El navegador bloquea la cámara porque la página no se considera segura. Abre la dirección HTTPS de Mi Biblioteca en Chrome.";
+    }
+    $("scannerMessage").textContent = explanation;
+    alert(explanation);
+    try { if (scannerControls && scannerControls.stop) scannerControls.stop(); } catch (_) {}
+    try { if (codeReader && codeReader.reset) codeReader.reset(); } catch (_) {}
+    scannerControls = null;
+    codeReader = null;
     $("scannerPanel").style.display = "none";
   }
 });
