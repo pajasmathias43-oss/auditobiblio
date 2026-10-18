@@ -1,382 +1,65 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#176b55">
-  <meta name="description" content="Inventario personal de libros por voz.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon-192.png">
-  <title>Mi Biblioteca</title>
-  <style>
-    :root { color-scheme: light; --green:#176b55; --bg:#f4f7f5; --ink:#18231f; --muted:#64716b; --line:#dce5df; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-    header { background:var(--green); color:white; padding:22px 18px 18px; }
-    header h1 { margin:0; font-size:1.45rem; }
-    header p { margin:5px 0 0; opacity:.9; font-size:.95rem; }
-    main { max-width:760px; margin:auto; padding:16px; padding-bottom:40px; }
-    .card { background:white; border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:14px; box-shadow:0 2px 8px #132b1b08; }
-    h2 { font-size:1.08rem; margin:0 0 12px; }
-    label { display:block; font-weight:650; font-size:.92rem; margin:12px 0 6px; }
-    input, select { width:100%; min-height:48px; border:1px solid #cbd7d0; border-radius:11px; padding:11px 12px; font:inherit; background:#fff; color:var(--ink); }
-    input:focus,select:focus { outline:2px solid #8cc7b4; border-color:var(--green); }
-    .hint { font-size:.83rem; color:var(--muted); margin:8px 0 0; line-height:1.4; }
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    button { border:0; border-radius:11px; padding:12px 14px; font:inherit; font-weight:700; cursor:pointer; min-height:46px; }
-    .primary { background:var(--green); color:white; width:100%; margin-top:15px; }
-    .secondary { background:#e8f2ed; color:#14523f; }
-    .danger { background:#fff0ee; color:#9a3027; }
-    .toolbar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .toolbar button { width:100%; }
-    .search { margin-bottom:12px; }
-    .book { border:1px solid var(--line); border-radius:13px; padding:13px; margin-top:9px; background:#fff; }
-    .book-title { font-weight:750; font-size:1rem; overflow-wrap:anywhere; }
-    .book-meta { color:var(--muted); margin-top:4px; font-size:.91rem; overflow-wrap:anywhere; }
-    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
-    .chip { border-radius:99px; background:#eaf3ee; color:#1a5a45; padding:4px 9px; font-size:.78rem; font-weight:650; }
-    .book-actions { display:flex; gap:8px; margin-top:10px; }
-    .book-actions button { flex:1; min-height:40px; padding:8px; }
-    .empty { color:var(--muted); text-align:center; padding:22px 8px; }
-    .count { color:var(--muted); font-size:.88rem; }
-    footer { text-align:center; color:var(--muted); font-size:.8rem; padding:0 20px 24px; }
-    @media (max-width:420px) { .row { grid-template-columns:1fr; gap:0; } main { padding:12px; } }
-  </style>
-</head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#176b55"><meta name="description" content="Inventario personal de libros por voz e ISBN."><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><title>Mi Biblioteca</title>
+<style>
+:root{color-scheme:light;--green:#176b55;--green2:#e8f2ed;--bg:#f3f7f4;--ink:#18231f;--muted:#65716b;--line:#dce5df;--red:#9a3027;--amber:#fff4d7}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}header{background:var(--green);color:#fff;padding:20px 18px 18px}header h1{margin:0;font-size:1.45rem}header p{margin:5px 0 0;opacity:.92}main{max-width:900px;margin:auto;padding:14px;padding-bottom:42px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #132b1b08}h2{font-size:1.08rem;margin:0 0 12px}label{display:block;font-weight:650;font-size:.92rem;margin:12px 0 6px}input,select{width:100%;min-height:46px;border:1px solid #cbd7d0;border-radius:11px;padding:10px 12px;font:inherit;background:#fff;color:var(--ink)}input:focus,select:focus{outline:2px solid #8cc7b4;border-color:var(--green)}button{border:0;border-radius:11px;padding:11px 13px;font:inherit;font-weight:700;cursor:pointer;min-height:43px}.primary{background:var(--green);color:#fff;width:100%;margin-top:14px}.secondary{background:var(--green2);color:#14523f}.danger{background:#fff0ee;color:var(--red)}.hint{font-size:.82rem;color:var(--muted);margin:8px 0 0;line-height:1.4}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.toolbar button{width:100%}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.full{grid-column:1/-1}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 10px}.stat strong{display:block;font-size:1.35rem;color:var(--green)}.stat span{font-size:.77rem;color:var(--muted)}.filters{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;margin:10px 0}.viewbar{display:flex;gap:7px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:10px 0}.viewbar .buttons{display:flex;gap:6px}.viewbar button[aria-pressed=true]{background:var(--green);color:white}.count{color:var(--muted);font-size:.86rem}.book-list{display:flex;flex-direction:column;gap:9px}.book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.book{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;min-width:0}.book-row{display:flex;gap:12px}.cover{width:68px;height:98px;object-fit:cover;border-radius:7px;background:#e9eeeb;flex:0 0 auto}.cover-placeholder{display:flex;align-items:center;justify-content:center;font-size:1.8rem}.book-body{min-width:0;flex:1}.book-title{font-weight:760;font-size:.98rem;overflow-wrap:anywhere}.book-meta{color:var(--muted);margin-top:4px;font-size:.87rem;overflow-wrap:anywhere}.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.chip{border-radius:99px;background:#eaf3ee;color:#1a5a45;padding:4px 8px;font-size:.75rem;font-weight:650}.book-actions{display:flex;gap:7px;margin-top:10px}.book-actions button{flex:1;min-height:37px;padding:7px;font-size:.87rem}.grid-card .cover{width:100%;height:170px;object-fit:contain;background:#f0f4f1}.grid-card .cover-placeholder{height:170px;width:100%;border-radius:8px}.grid-card .book-title{margin-top:9px}.empty{color:var(--muted);text-align:center;padding:24px 8px}.notice{padding:10px 12px;background:var(--amber);border-radius:10px;font-size:.88rem;margin-top:10px}.hidden{display:none!important}footer{text-align:center;color:var(--muted);font-size:.8rem;padding:0 20px 24px}video{width:100%;max-height:300px;background:#111;border-radius:12px}@media(max-width:560px){main{padding:10px}.form-grid,.row{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.book-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-card .cover,.grid-card .cover-placeholder{height:135px}}@media(min-width:700px){.book-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head>
 <body>
-<header>
-  <h1>📚 Mi Biblioteca</h1>
-  <p>Tu inventario personal, sencillo y privado.</p>
-</header>
+<header><h1>📚 Mi Biblioteca</h1><p>Tu inventario personal, sencillo y privado.</p></header>
 <main>
-  <section class="card">
-    <h2 id="formTitle">Añadir un libro</h2>
-    <form id="bookForm">
-      <input type="hidden" id="bookId">
-      <label for="title">Título</label>
-      <input id="title" autocomplete="off" required placeholder="Toca el micrófono del teclado y dicta el título">
-      <button class="secondary" type="button" id="scanIsbn" style="width:100%;margin-top:8px">📷 Escanear ISBN con la cámara</button>
-      <div id="scannerPanel" style="display:none;margin-top:10px">
-        <video id="scannerVideo" playsinline autoplay muted style="width:100%;max-height:300px;background:#111;border-radius:12px"></video>
-        <p class="hint" id="scannerMessage">Apunta la cámara al código de barras ISBN de la contraportada.</p>
-        <button class="danger" type="button" id="stopScanner" style="width:100%">Cerrar cámara</button>
-      </div>
-      <label for="author">Autor</label>
-      <input id="author" autocomplete="off" placeholder="Nombre del autor">
-      <div class="row">
-        <div>
-          <label for="status">Estado</label>
-          <select id="status">
-            <option>Pendiente de leer</option>
-            <option>Leyendo</option>
-            <option>Leído</option>
-            <option>Prestado</option>
-            <option>En pausa</option>
-          </select>
-        </div>
-        <div>
-          <label for="shelf">Balda</label>
-          <input id="shelf" autocomplete="off" placeholder="Ej. 2, salón, B">
-        </div>
-      </div>
-      <p class="hint">Consejo: en Android, toca un campo y pulsa el micrófono del teclado para dictar. Revisa el texto antes de guardar.</p>
-      <button class="primary" type="submit" id="saveBtn">Guardar libro</button>
-      <button class="secondary" type="button" id="cancelEdit" style="display:none;width:100%;margin-top:8px">Cancelar edición</button>
-    </form>
-  </section>
-
-  <section class="card">
-    <h2>Mi colección</h2>
-    <input class="search" id="search" placeholder="Buscar por título, autor, estado o balda">
-    <div class="toolbar">
-      <button class="secondary" id="exportCsv" type="button">Exportar a Excel (CSV)</button>
-      <button class="secondary" id="exportJson" type="button">Copia de seguridad</button>
-      <button class="secondary" id="importJsonBtn" type="button">Restaurar copia</button>
-      <button class="danger" id="installBtn" type="button" hidden>Instalar aplicación</button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
-    </div>
-    <p class="hint">Los libros se guardan en este dispositivo. Usa “Copia de seguridad” para guardar un archivo aparte.</p>
-    <p class="count" id="count"></p>
-    <div id="bookList"></div>
-  </section>
-</main>
-<footer>Mi Biblioteca · Los datos permanecen en este dispositivo, salvo que exportes una copia.</footer>
-
+<section class="stats" aria-label="Estadísticas"><div class="stat"><strong id="statTotal">0</strong><span>Libros en total</span></div><div class="stat"><strong id="statRead">0</strong><span>Leídos</span></div><div class="stat"><strong id="statPending">0</strong><span>Pendientes</span></div><div class="stat"><strong id="statBorrowed">0</strong><span>Prestados</span></div></section>
+<section class="card"><h2 id="formTitle">Añadir un libro</h2><form id="bookForm"><input type="hidden" id="bookId"><div class="form-grid">
+<div class="full"><label for="title">Título *</label><input id="title" autocomplete="off" required placeholder="Puedes dictarlo con el micrófono del teclado"><button class="secondary" type="button" id="scanIsbn" style="width:100%;margin-top:8px">📷 Escanear ISBN con la cámara</button><div id="scannerPanel" class="hidden" style="margin-top:10px"><video id="scannerVideo" playsinline autoplay muted></video><p class="hint" id="scannerMessage">Apunta al código de barras ISBN de la contraportada.</p><button class="danger" type="button" id="stopScanner" style="width:100%">Cerrar cámara</button></div></div>
+<div><label for="author">Autor</label><input id="author" autocomplete="off" placeholder="Nombre del autor"></div><div><label for="isbn">ISBN (opcional)</label><input id="isbn" inputmode="numeric" autocomplete="off" placeholder="978…"><button class="secondary" type="button" id="lookupIsbn" style="width:100%;margin-top:6px">Buscar datos por ISBN</button><p class="hint" id="isbnLookupMessage" role="status" aria-live="polite">Se consultarán varios catálogos si el libro no aparece a la primera.</p></div><div><label for="status">Estado</label><select id="status"><option>Pendiente de leer</option><option>Leyendo</option><option>Leído</option><option>Prestado</option><option>En pausa</option></select></div><div><label for="shelf">Balda</label><input id="shelf" autocomplete="off" placeholder="Ej. 2, salón, B"></div>
+</div><p class="hint">En Android, toca un campo y usa el micrófono del teclado para dictar. Revisa los datos antes de guardar.</p><div id="duplicateNotice" class="notice hidden"></div><button class="primary" type="submit" id="saveBtn">Guardar libro</button><button class="secondary hidden" type="button" id="cancelEdit" style="width:100%;margin-top:8px">Cancelar edición</button></form></section>
+<section class="card"><h2>Mi colección</h2><div class="filters"><input id="search" placeholder="Buscar título, autor, ISBN…" aria-label="Buscar"><select id="statusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option>Pendiente de leer</option><option>Leyendo</option><option>Leído</option><option>Prestado</option><option>En pausa</option></select><select id="sortBy" aria-label="Ordenar"><option value="title">Título A–Z</option><option value="author">Autor A–Z</option><option value="shelf">Balda A–Z</option><option value="newest">Añadidos recientemente</option></select></div><div class="viewbar"><span class="count" id="count">0 libros</span><div class="buttons"><button class="secondary" id="listView" type="button" aria-pressed="true">☷ Lista</button><button class="secondary" id="gridView" type="button" aria-pressed="false">▦ Portadas</button></div></div><div id="bookList" class="book-list"></div><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><h2>Copias y exportación</h2><div class="toolbar"><button class="secondary" id="exportCsv" type="button">Exportar CSV</button><button class="secondary" id="exportJson" type="button">Crear copia JSON</button><button class="secondary" id="importJsonBtn" type="button">Restaurar / importar copia</button><button class="secondary" id="installBtn" type="button" hidden>Instalar aplicación</button><input type="file" id="importFile" accept="application/json,.json" hidden></div><p class="hint">Tus datos se guardan solo en este dispositivo. Guarda copias JSON regularmente. Al restaurar podrás combinar libros o sustituir toda la biblioteca.</p></section>
+</main><footer>Mi Biblioteca · Almacenamiento local y privado. Exporta una copia para proteger tus datos.</footer>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <script>
-const STORAGE_KEY = "mi-biblioteca-libros-v1";
-const $ = id => document.getElementById(id);
-let books = [];
-let deferredInstallPrompt = null;
-
-function loadBooks() {
-  try { books = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch { books = []; }
+'use strict';
+const STORAGE_KEY='mi-biblioteca-libros-v1'; // Conserva la clave de versiones anteriores para mantener los datos existentes.
+const $=id=>document.getElementById(id);let books=[];let deferredInstallPrompt=null;let currentView='list';let codeReader=null;let scannerControls=null;let scanBusy=false;
+function safeId(){return (crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));}
+function normalizeBook(b){return {id:String(b.id||safeId()),title:String(b.title||''),author:String(b.author||''),status:String(b.status||'Pendiente de leer'),shelf:String(b.shelf||''),isbn:String(b.isbn||''),cover:String(b.cover||b.thumbnail||''),createdAt:b.createdAt||new Date().toISOString()};}
+function loadBooks(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');books=Array.isArray(saved)?saved.filter(b=>b&&typeof b.title==='string').map(normalizeBook):[];}catch(e){books=[];alert('No se pudo leer el inventario local. Si tienes una copia JSON, puedes restaurarla.');}}
+function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(books));render();}catch(e){alert('No se han podido guardar los cambios. Exporta una copia y comprueba el espacio disponible en el navegador.');}}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function resetForm(){$('bookForm').reset();$('bookId').value='';$('formTitle').textContent='Añadir un libro';$('saveBtn').textContent='Guardar libro';$('cancelEdit').classList.add('hidden');$('duplicateNotice').classList.add('hidden');$('status').value='Pendiente de leer';}
+function norm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('es');}
+function findDuplicates(title,author,isbn,excludeId=''){const cleanIsbn=String(isbn||'').replace(/[^0-9Xx]/g,'').toUpperCase();return books.filter(b=>b.id!==excludeId&&((cleanIsbn&&String(b.isbn||'').replace(/[^0-9Xx]/g,'').toUpperCase()===cleanIsbn)||(norm(title)&&norm(b.title)===norm(title)&&(!author||!b.author||norm(b.author)===norm(author)))));}
+function showDuplicateWarning(){const title=$('title').value.trim(),author=$('author').value.trim(),isbn=$('isbn').value.trim();const d=findDuplicates(title,author,isbn,$('bookId').value);const el=$('duplicateNotice');if(d.length){el.textContent='Posible duplicado: '+d.map(b=>'“'+b.title+'”'+(b.shelf?' (balda '+b.shelf+')':'')).join(', ')+'. Puedes revisar la colección antes de guardar.';el.classList.remove('hidden');}else el.classList.add('hidden');}
+['title','author','isbn'].forEach(id=>$(id).addEventListener('input',showDuplicateWarning));
+$('bookForm').addEventListener('submit',e=>{e.preventDefault();const title=$('title').value.trim(),author=$('author').value.trim(),status=$('status').value,shelf=$('shelf').value.trim(),isbn=$('isbn').value.trim().replace(/[^0-9Xx]/g,'').toUpperCase(),id=$('bookId').value;if(!title){alert('Escribe o dicta el título del libro.');return;}const dup=findDuplicates(title,author,isbn,id);if(dup.length&&!confirm('Hay uno o más posibles duplicados: '+dup.map(b=>b.title).join(', ')+'. ¿Quieres guardar de todos modos?'))return;const old=books.find(b=>b.id===id);const item={...(old||{}),id:id||safeId(),title,author,status,shelf,isbn,cover:window._scannedCover||old?.cover||'',createdAt:old?.createdAt||new Date().toISOString()};window._scannedCover='';if(id){const i=books.findIndex(b=>b.id===id);if(i>=0)books[i]=item;}else books.unshift(item);persist();resetForm();window.scrollTo({top:0,behavior:'smooth'});});
+$('cancelEdit').addEventListener('click',resetForm);
+function editBook(id){const b=books.find(x=>x.id===id);if(!b)return;$('bookId').value=b.id;$('title').value=b.title;$('author').value=b.author;$('status').value=b.status;$('shelf').value=b.shelf;$('isbn').value=b.isbn||'';$('formTitle').textContent='Editar libro';$('saveBtn').textContent='Guardar cambios';$('cancelEdit').classList.remove('hidden');showDuplicateWarning();window.scrollTo({top:0,behavior:'smooth'});}
+function deleteBook(id){const b=books.find(x=>x.id===id);if(!b||!confirm('¿Eliminar “'+b.title+'” del inventario?'))return;books=books.filter(x=>x.id!==id);persist();}
+function updateStats(){ $('statTotal').textContent=books.length;$('statRead').textContent=books.filter(b=>b.status==='Leído').length;$('statPending').textContent=books.filter(b=>b.status==='Pendiente de leer').length;$('statBorrowed').textContent=books.filter(b=>b.status==='Prestado').length; }
+function render(){updateStats();const q=norm($('search').value),status=$('statusFilter').value,sort=$('sortBy').value;let filtered=books.filter(b=>(!status||b.status===status)&&[b.title,b.author,b.status,b.shelf,b.isbn].some(v=>norm(v).includes(q)));filtered.sort((a,b)=>sort==='author'?norm(a.author).localeCompare(norm(b.author),'es')||norm(a.title).localeCompare(norm(b.title),'es'):sort==='shelf'?norm(a.shelf).localeCompare(norm(b.shelf),'es')||norm(a.title).localeCompare(norm(b.title),'es'):sort==='newest'?String(b.createdAt).localeCompare(String(a.createdAt)):norm(a.title).localeCompare(norm(b.title),'es'));$('count').textContent=filtered.length+' libro(s) mostrado(s) · '+books.length+' en total';const list=$('bookList');list.className=currentView==='grid'?'book-grid':'book-list';if(!filtered.length){list.innerHTML='<div class="empty">'+(books.length?'No hay resultados con esos filtros.':'Todavía no has añadido libros. Empieza con el formulario de arriba.')+'</div>';return;}list.innerHTML=filtered.map(b=>{const cover=b.cover&&/^https:\/\//i.test(b.cover)?'<img class="cover" src="'+esc(b.cover)+'" alt="Portada de '+esc(b.title)+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div class="cover cover-placeholder" aria-hidden="true">📖</div>';return '<article class="book '+(currentView==='grid'?'grid-card':'')+'"><div class="book-row">'+(currentView==='list'?cover:'')+'<div class="book-body">'+(currentView==='grid'?cover:'')+'<div class="book-title">'+esc(b.title)+'</div><div class="book-meta">'+esc(b.author||'Autor no indicado')+'</div><div class="chips"><span class="chip">'+esc(b.status)+'</span><span class="chip">Balda: '+esc(b.shelf||'Sin indicar')+'</span>'+(b.isbn?'<span class="chip">ISBN '+esc(b.isbn)+'</span>':'')+'</div><div class="book-actions"><button class="secondary" type="button" data-edit="'+esc(b.id)+'">Editar</button><button class="danger" type="button" data-delete="'+esc(b.id)+'">Eliminar</button></div></div></div></article>';}).join('');list.querySelectorAll('[data-edit]').forEach(x=>x.addEventListener('click',()=>editBook(x.dataset.edit)));list.querySelectorAll('[data-delete]').forEach(x=>x.addEventListener('click',()=>deleteBook(x.dataset.delete)));}
+$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);$('sortBy').addEventListener('change',render);$('listView').addEventListener('click',()=>setView('list'));$('gridView').addEventListener('click',()=>setView('grid'));function setView(v){currentView=v;$('listView').setAttribute('aria-pressed',String(v==='list'));$('gridView').setAttribute('aria-pressed',String(v==='grid'));render();}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+$('exportCsv').addEventListener('click',()=>{const rows=[['Título','Autor','Estado','Balda','ISBN'],...books.map(b=>[b.title,b.author,b.status,b.shelf,b.isbn])];const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),'mi_biblioteca.csv');});
+$('exportJson').addEventListener('click',()=>{const payload={app:'Mi Biblioteca',version:2,exportedAt:new Date().toISOString(),books};downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'copia_mi_biblioteca_'+new Date().toISOString().slice(0,10)+'.json');});
+$('importJsonBtn').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const parsed=JSON.parse(await file.text());const imported=Array.isArray(parsed)?parsed:parsed&&Array.isArray(parsed.books)?parsed.books:null;if(!imported||!imported.every(b=>b&&typeof b.title==='string'))throw Error('Formato no válido');const normalized=imported.map(normalizeBook);const mode=prompt('La copia contiene '+normalized.length+' libros. Escribe COMBINAR para añadir los que falten o SUSTITUIR para reemplazar el inventario actual.','COMBINAR');if(!mode)return;if(mode.trim().toUpperCase()==='SUSTITUIR'){if(!confirm('Esto sustituirá los '+books.length+' libros actuales. ¿Tienes una copia de seguridad?'))return;books=normalized;}else if(mode.trim().toUpperCase()==='COMBINAR'){const keys=new Set(books.map(b=>b.isbn?'isbn:'+b.isbn.replace(/[^0-9Xx]/g,'').toUpperCase():'title:'+norm(b.title)+'|'+norm(b.author)));let added=0;for(const b of normalized){const key=b.isbn?'isbn:'+b.isbn.replace(/[^0-9Xx]/g,'').toUpperCase():'title:'+norm(b.title)+'|'+norm(b.author);if(!keys.has(key)){books.push({...b,id:safeId()});keys.add(key);added++;}}alert('Se han añadido '+added+' libro(s) nuevos.');}else{alert('No se hizo ningún cambio. Escribe COMBINAR o SUSTITUIR.');return;}persist();}catch(err){alert('No se pudo leer la copia. Selecciona un JSON exportado por Mi Biblioteca.');}finally{e.target.value='';}});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').hidden=false;});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt){alert('Abre el menú ⋮ de Chrome y busca “Instalar aplicación” o “Añadir a pantalla de inicio”.');return;}deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').hidden=true;});
+$('lookupIsbn').addEventListener('click',async()=>{const isbn=normalizarISBN($('isbn').value);$('isbn').value=isbn;if(!isbn){setLookupMessage('Escribe un ISBN-10 o ISBN-13.','error');return;}if(!isbnValido(isbn)){setLookupMessage('El ISBN no supera la comprobación de dígito. Revisa los números; también puedes continuar manualmente.','error');return;}const btn=$('lookupIsbn');btn.disabled=true;btn.textContent='Buscando…';setLookupMessage('Consultando Google Books…','loading');try{const result=await buscarLibroPorISBN(isbn);showDuplicateWarning();setLookupMessage('Datos encontrados en '+result.source+'. Revisa el título y el autor antes de guardar.','success');}catch(e){setLookupMessage(e.message||'No se encontró información para este ISBN. El ISBN se conserva: puedes completar título y autor manualmente.','error');}finally{btn.disabled=false;btn.textContent='Buscar datos por ISBN';}});
+$('scanIsbn').addEventListener('click',startScanner);async function startScanner(){const video=$('scannerVideo');if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){alert('La cámara requiere una dirección HTTPS abierta en Chrome.');return;}if(!window.ZXingBrowser?.BrowserMultiFormatReader){alert('No se ha cargado el lector de códigos. Comprueba Internet y vuelve a intentarlo.');return;}try{$('scannerPanel').classList.remove('hidden');$('scannerMessage').textContent='Solicitando permiso de cámara…';const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});stream.getTracks().forEach(t=>t.stop());const devices=await navigator.mediaDevices.enumerateDevices(),cams=devices.filter(d=>d.kind==='videoinput'),back=cams.find(d=>/back|rear|environment|trasera|posterior/i.test(d.label));if(!cams.length)throw new Error('NotFoundError');codeReader=new ZXingBrowser.BrowserMultiFormatReader();$('scannerMessage').textContent='Enfoca el código de barras de la contraportada.';scannerControls=await codeReader.decodeFromVideoDevice((back||cams[0]).deviceId,video,async(result,err,controls)=>{if(!result||scanBusy)return;const raw=result.getText().replace(/[^0-9Xx]/g,'').toUpperCase();if(!/^97[89]\d{10}$/.test(raw)){$('scannerMessage').textContent='No parece un ISBN-13. Enfoca el código de barras del libro.';return;}scanBusy=true;$('isbn').value=raw;$('scannerMessage').textContent='ISBN detectado. Buscando información…';try{controls?.stop();const lookupResult=await buscarLibroPorISBN(raw);showDuplicateWarning();$('scannerMessage').textContent='Datos encontrados en '+lookupResult.source+'. Revisa y guarda el libro.';}catch(e){$('scannerMessage').textContent=e.message||'No se encontró información. Puedes completar los campos manualmente.';setLookupMessage(e.message||'No se encontró información. Puedes completar los campos manualmente.','error');}finally{scanBusy=false;stopScanner(false);}});}catch(e){let msg='No se pudo iniciar la cámara.';if(['NotAllowedError','PermissionDeniedError'].includes(e.name))msg='Chrome ha denegado el acceso. Revisa el permiso de la página y vuelve a intentarlo.';else if(e.name==='NotFoundError')msg='No se ha encontrado una cámara disponible.';else if(['NotReadableError','TrackStartError'].includes(e.name))msg='La cámara parece estar ocupada por otra aplicación. Cierra otras apps que la usen.';else if(e.name==='SecurityError'||!window.isSecureContext)msg='La página no se considera segura. Abre la dirección HTTPS de Mi Biblioteca.';$('scannerMessage').textContent=msg;alert(msg);stopScanner(false);}}
+function stopScanner(hide=true){try{scannerControls?.stop();}catch(e){}try{codeReader?.reset();}catch(e){}try{$('scannerVideo').srcObject?.getTracks().forEach(t=>t.stop());}catch(e){}scannerControls=null;codeReader=null;scanBusy=false;if(hide)$('scannerPanel').classList.add('hidden');else $('scannerPanel').classList.add('hidden');}$('stopScanner').addEventListener('click',()=>stopScanner(true));
+function normalizarISBN(value){return String(value||'').replace(/[\s\-‐‑‒–—]/g,'').replace(/[^0-9Xx]/g,'').toUpperCase();}
+function isbnValido(isbn){if(/^\d{13}$/.test(isbn)){let sum=0;for(let i=0;i<13;i++)sum+=Number(isbn[i])*(i%2?3:1);return sum%10===0;}if(/^\d{9}[\dX]$/.test(isbn)){let sum=0;for(let i=0;i<10;i++)sum+=(isbn[i]==='X'?10:Number(isbn[i]))*(10-i);return sum%11===0;}return false;}
+function setLookupMessage(message,type=''){const el=$('isbnLookupMessage');if(el){el.textContent=message;el.style.color=type==='error'?'var(--red)':type==='success'?'var(--green)':'var(--muted)';}const scanner=$('scannerMessage');if(scanner&&!$('scannerPanel').classList.contains('hidden'))scanner.textContent=message;}
+async function fetchJson(url,timeoutMs=6500){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}finally{clearTimeout(timer);}}
+function mapGoogleBook(item){const v=item?.volumeInfo;if(!v?.title)return null;const ids=(v.industryIdentifiers||[]).map(x=>normalizarISBN(x.identifier));const image=v.imageLinks?.extraLarge||v.imageLinks?.large||v.imageLinks?.medium||v.imageLinks?.thumbnail||v.imageLinks?.smallThumbnail||'';return {title:v.title,authors:v.authors||[],imageLinks:{thumbnail:image},identifiers:ids,source:'Google Books'};}
+function chooseGoogleItem(items,isbn){const mapped=(items||[]).map(mapGoogleBook).filter(Boolean);return mapped.find(x=>x.identifiers.includes(isbn))||mapped.find(x=>x.title)||null;}
+async function buscarLibroPorISBN(rawIsbn){const isbn=normalizarISBN(rawIsbn);if(!isbnValido(isbn))throw Error('El ISBN no es válido. Comprueba que tenga 10 o 13 caracteres y que los dígitos sean correctos.');let info=null;let failures=0;
+  // 1) Google Books: primero consulta ISBN exacto y prioriza una coincidencia real en los identificadores.
+  for(const query of ['isbn:'+isbn, isbn]){try{const data=await fetchJson('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(query)+'&maxResults=10&printType=books');info=chooseGoogleItem(data.items,isbn);if(info)break;}catch(e){failures++;}}
+  // 2) Open Library Search API: suele devolver ediciones y números ISBN asociados.
+  if(!info){try{const data=await fetchJson('https://openlibrary.org/search.json?isbn='+encodeURIComponent(isbn)+'&fields=title,author_name,isbn,cover_i,edition_key&limit=10');const docs=(data.docs||[]);const doc=docs.find(d=>(d.isbn||[]).map(normalizarISBN).includes(isbn))||docs[0];if(doc?.title){info={title:doc.title,authors:(doc.author_name||[]).map(name=>({name})),imageLinks:{thumbnail:doc.cover_i?'https://covers.openlibrary.org/b/id/'+doc.cover_i+'-M.jpg?default=false':''},identifiers:doc.isbn||[],source:'Open Library'};}}catch(e){failures++;}}
+  // 3) Open Library Books API por ISBN, como último intento.
+  if(!info){try{const data=await fetchJson('https://openlibrary.org/api/books?bibkeys=ISBN:'+encodeURIComponent(isbn)+'&format=json&jscmd=data');const item=data['ISBN:'+isbn];if(item?.title){info={title:item.title,authors:item.authors||[],imageLinks:{thumbnail:item.cover?.large||item.cover?.medium||item.cover?.small||''},source:'Open Library'};}}catch(e){failures++;}}
+  if(!info?.title){if(failures>=3)throw Error('Los catálogos no han respondido. Comprueba la conexión a Internet e inténtalo de nuevo. El ISBN se conserva para completar los datos manualmente.');throw Error('No aparece este ISBN en los catálogos consultados. Puede ser una edición poco común o un libro sin ficha digital. El ISBN se conserva; puedes rellenar título y autor manualmente.');}
+  $('title').value=info.title;$('author').value=Array.isArray(info.authors)?info.authors.map(a=>typeof a==='string'?a:(a.name||'')).filter(Boolean).join(', '):'';const cover=info.imageLinks?.thumbnail||info.imageLinks?.smallThumbnail||'';window._scannedCover=cover.replace(/^http:\/\//i,'https://');if($('scannerMessage'))$('scannerMessage').textContent='Datos encontrados. Revisa y guarda el libro.';return {source:info.source||'el catálogo bibliográfico'};
 }
-function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
-  render();
-}
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, ch => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[ch]);
-}
-function resetForm() {
-  $("bookForm").reset();
-  $("bookId").value = "";
-  $("formTitle").textContent = "Añadir un libro";
-  $("saveBtn").textContent = "Guardar libro";
-  $("cancelEdit").style.display = "none";
-  $("status").value = "Pendiente de leer";
-}
-$("bookForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const title = $("title").value.trim();
-  const author = $("author").value.trim();
-  const status = $("status").value;
-  const shelf = $("shelf").value.trim();
-  if (!title) { alert("Escribe o dicta el título del libro."); return; }
-  const id = $("bookId").value;
-  if (id) {
-    const index = books.findIndex(b => b.id === id);
-    if (index >= 0) books[index] = {...books[index], title, author, status, shelf};
-  } else {
-    books.unshift({id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, author, status, shelf, createdAt: new Date().toISOString()});
-  }
-  persist();
-  resetForm();
-});
-$("cancelEdit").addEventListener("click", resetForm);
-
-function editBook(id) {
-  const b = books.find(item => item.id === id);
-  if (!b) return;
-  $("bookId").value = b.id;
-  $("title").value = b.title || "";
-  $("author").value = b.author || "";
-  $("status").value = b.status || "Pendiente de leer";
-  $("shelf").value = b.shelf || "";
-  $("formTitle").textContent = "Editar libro";
-  $("saveBtn").textContent = "Guardar cambios";
-  $("cancelEdit").style.display = "block";
-  window.scrollTo({top:0, behavior:"smooth"});
-}
-function deleteBook(id) {
-  const b = books.find(item => item.id === id);
-  if (!b || !confirm(`¿Eliminar “${b.title}” del inventario?`)) return;
-  books = books.filter(item => item.id !== id);
-  persist();
-}
-function render() {
-  const q = $("search").value.trim().toLocaleLowerCase("es");
-  const filtered = books.filter(b => [b.title,b.author,b.status,b.shelf].join(" ").toLocaleLowerCase("es").includes(q));
-  $("count").textContent = `${filtered.length} libro(s) mostrado(s) · ${books.length} en total`;
-  const list = $("bookList");
-  if (!filtered.length) {
-    list.innerHTML = `<div class="empty">${books.length ? "No hay resultados para esa búsqueda." : "Todavía no has añadido libros. Empieza con el formulario de arriba."}</div>`;
-    return;
-  }
-  list.innerHTML = filtered.map(b => `
-    <article class="book">
-      <div class="book-title">${escapeHtml(b.title)}</div>
-      <div class="book-meta">${escapeHtml(b.author || "Autor no indicado")}</div>
-      <div class="chips">
-        <span class="chip">${escapeHtml(b.status || "Sin estado")}</span>
-        <span class="chip">Balda: ${escapeHtml(b.shelf || "Sin indicar")}</span>
-      </div>
-      <div class="book-actions">
-        <button class="secondary" type="button" data-edit="${escapeHtml(b.id)}">Editar</button>
-        <button class="danger" type="button" data-delete="${escapeHtml(b.id)}">Eliminar</button>
-      </div>
-    </article>`).join("");
-  list.querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => editBook(btn.dataset.edit)));
-  list.querySelectorAll("[data-delete]").forEach(btn => btn.addEventListener("click", () => deleteBook(btn.dataset.delete)));
-}
-$("search").addEventListener("input", render);
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-}
-$("exportCsv").addEventListener("click", () => {
-  const rows = [["Título","Autor","Estado","Balda"], ...books.map(b => [b.title,b.author,b.status,b.shelf])];
-  const csv = "\uFEFF" + rows.map(row => row.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(";")).join("\r\n");
-  downloadBlob(new Blob([csv], {type:"text/csv;charset=utf-8"}), "mi_biblioteca.csv");
-});
-$("exportJson").addEventListener("click", () => {
-  downloadBlob(new Blob([JSON.stringify(books,null,2)], {type:"application/json"}), "copia_mi_biblioteca.json");
-});
-$("importJsonBtn").addEventListener("click", () => $("importFile").click());
-$("importFile").addEventListener("change", async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const imported = JSON.parse(await file.text());
-    if (!Array.isArray(imported) || !imported.every(b => b && typeof b.title === "string")) throw new Error("Formato no válido");
-    if (!confirm(`La copia contiene ${imported.length} libros. ¿Quieres sustituir el inventario actual?`)) return;
-    books = imported.map(b => ({
-      id: String(b.id || (Date.now() + Math.random())),
-      title: b.title || "", author: b.author || "",
-      status: b.status || "Pendiente de leer", shelf: b.shelf || ""
-    }));
-    persist();
-    alert("Copia restaurada.");
-  } catch { alert("No se pudo leer la copia. Selecciona un archivo JSON exportado por esta aplicación."); }
-  finally { event.target.value = ""; }
-});
-
-window.addEventListener("beforeinstallprompt", event => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  $("installBtn").hidden = false;
-});
-$("installBtn").addEventListener("click", async () => {
-  if (!deferredInstallPrompt) {
-    alert("Si ya has añadido la app, abre el menú de Chrome y busca “Instalar aplicación” o “Añadir a pantalla de inicio”.");
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  $("installBtn").hidden = true;
-});
-
-let codeReader = null;
-let scannerControls = null;
-let scanBusy = false;
-
-$("scanIsbn").addEventListener("click", async () => {
-  const video = $("scannerVideo");
-  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Este navegador no permite acceder a la cámara en esta página. Abre Mi Biblioteca desde su dirección HTTPS completa en Chrome y vuelve a intentarlo.");
-    return;
-  }
-  if (!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) {
-    alert("No se ha podido cargar el lector de códigos de barras. Comprueba la conexión a Internet y vuelve a intentarlo.");
-    return;
-  }
-  try {
-    $("scannerPanel").style.display = "block";
-    $("scannerMessage").textContent = "Solicitando permiso para usar la cámara…";
-
-    // Solicitar permiso explícitamente antes de enumerar dispositivos. En algunos
-    // navegadores los dispositivos no se enumeran correctamente hasta dar permiso.
-    const permissionStream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: "environment" } }
-    });
-    permissionStream.getTracks().forEach(track => track.stop());
-
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(device => device.kind === "videoinput");
-    const backCamera = cameras.find(device => /back|rear|environment|trasera|posterior/i.test(device.label));
-    const deviceId = (backCamera || cameras[0] || {}).deviceId;
-    if (!cameras.length) throw new Error("NOT_FOUND:No se ha encontrado ninguna cámara disponible para Chrome.");
-
-    codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-    $("scannerMessage").textContent = "Cámara activada. Apunta al código de barras ISBN de la contraportada.";
-    scannerControls = await codeReader.decodeFromVideoDevice(deviceId, video, async (result, err, controls) => {
-      if (!result || scanBusy) return;
-      const raw = result.getText().replace(/[^0-9Xx]/g, "");
-      if (!/^97[89]\d{10}$/.test(raw)) {
-        $("scannerMessage").textContent = "Código leído, pero no parece un ISBN-13. Enfoca el código de barras de la contraportada.";
-        return;
-      }
-      scanBusy = true;
-      $("scannerMessage").textContent = "ISBN " + raw + " detectado. Buscando los datos del libro…";
-      try {
-        if (controls && controls.stop) controls.stop();
-        await buscarLibroPorISBN(raw);
-        $("scannerMessage").textContent = "Datos encontrados. Revisa el título y el autor y guarda el libro.";
-      } catch (e) {
-        $("scannerMessage").textContent = "No se encontraron los datos de ese ISBN. Puedes escribir título y autor manualmente.";
-        alert("No se ha encontrado información para ese ISBN. Rellena el título y el autor manualmente.");
-      } finally {
-        scanBusy = false;
-        if (scannerControls && scannerControls.stop) scannerControls.stop();
-        $("scannerPanel").style.display = "none";
-      }
-    });
-  } catch (e) {
-    const name = e && e.name ? e.name : "";
-    const message = String(e && e.message ? e.message : "");
-    let explanation = "No se pudo iniciar la cámara.";
-    if (name === "NotAllowedError" || name === "PermissionDeniedError" || /denied|permission/i.test(message)) {
-      explanation = "Chrome ha rechazado el acceso a la cámara. Revisa el permiso de Cámara de Chrome y el permiso de este sitio web.";
-    } else if (name === "NotFoundError" || /NOT_FOUND/.test(message)) {
-      explanation = "No se ha detectado una cámara disponible para el navegador.";
-    } else if (name === "NotReadableError" || name === "TrackStartError") {
-      explanation = "La cámara está ocupada por otra aplicación. Cierra otras apps que la estén usando y vuelve a probar.";
-    } else if (name === "OverconstrainedError") {
-      explanation = "No se ha podido seleccionar la cámara trasera. Inténtalo de nuevo.";
-    } else if (name === "SecurityError" || !window.isSecureContext) {
-      explanation = "El navegador bloquea la cámara porque la página no se considera segura. Abre la dirección HTTPS de Mi Biblioteca en Chrome.";
-    }
-    $("scannerMessage").textContent = explanation;
-    alert(explanation);
-    try { if (scannerControls && scannerControls.stop) scannerControls.stop(); } catch (_) {}
-    try { if (codeReader && codeReader.reset) codeReader.reset(); } catch (_) {}
-    scannerControls = null;
-    codeReader = null;
-    $("scannerPanel").style.display = "none";
-  }
-});
-
-async function buscarLibroPorISBN(isbn) {
-  let title = "";
-  let author = "";
-  // Google Books is tried first, then Open Library.
-  try {
-    const response = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + encodeURIComponent(isbn));
-    if (response.ok) {
-      const data = await response.json();
-      const info = data.items && data.items[0] && data.items[0].volumeInfo;
-      if (info) {
-        title = info.title || "";
-        author = Array.isArray(info.authors) ? info.authors.join(", ") : "";
-      }
-    }
-  } catch (_) {}
-  if (!title) {
-    try {
-      const response = await fetch("https://openlibrary.org/api/books?bibkeys=ISBN:" + encodeURIComponent(isbn) + "&format=json&jscmd=data");
-      if (response.ok) {
-        const data = await response.json();
-        const info = data["ISBN:" + isbn];
-        if (info) {
-          title = info.title || "";
-          author = Array.isArray(info.authors) ? info.authors.map(a => a.name).join(", ") : "";
-        }
-      }
-    } catch (_) {}
-  }
-  if (!title) throw new Error("Libro no encontrado");
-  $("title").value = title;
-  if (author) $("author").value = author;
-  $("scannerMessage").textContent = "Datos encontrados. Revisa el título y el autor y guarda el libro.";
-}
-
-$("stopScanner").addEventListener("click", () => {
-  try { if (scannerControls) scannerControls.stop(); } catch (_) {}
-  try { if (codeReader) codeReader.reset(); } catch (_) {}
-  scannerControls = null;
-  codeReader = null;
-  scanBusy = false;
-  $("scannerPanel").style.display = "none";
-});
-
-loadBooks();
-prepararInicial();
-render();
-function prepararInicial() {
-  $("status").value = "Pendiente de leer";
-  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
-  }
-}
-</script>
-</body>
-</html>
+loadBooks();render();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script></body></html>
